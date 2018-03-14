@@ -991,7 +991,7 @@ int mod::create(int argc, char * argv[], std::ostream& sout)
       for (i=0; i<2*r->total_step; i++)
       {
         std::vector<OpenRAVE::dReal> vec;
-        starttraj->GetWaypoint(i, vec, r->robot->GetActiveConfigurationSpecification());
+        starttraj->Sample(vec, i*starttraj->GetDuration()/((2 * r->total_step)-1), r->robot->GetActiveConfigurationSpecification());
         for (j=0; j<r->n_adof; j++)
           r->traj[i*r->n_adof+j] = vec[j];
       }
