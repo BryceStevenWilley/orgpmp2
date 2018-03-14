@@ -1200,6 +1200,25 @@ int mod::gettraj(int argc, char * argv[], std::ostream& sout)
   return 0;
 }
 
+int mod::getcost(int argc, char* argv[], std::ostream& sout)
+{
+  OpenRAVE::TrajectoryBasePtr starttraj;
+
+  for (int i = 1; i< argc; i++)
+  {
+    if (strcmp(argv[i], "starttraj")==0 && i+1 < argc)
+    {
+      if (starttraj.get()) {exc = "Only one starttraj can be passed!"; goto error; }
+      starttraj = RaveCreateTrajectory(this->e);
+      std::string traj_str(argv[++i]);
+      std::istringstream ser_iss(traj_str);
+      starttraj->deserialize(ser_iss);
+    }
+  }
+
+  // TODO(brycew): Get the cost and return it.
+}
+
 /**
  * destroy run
  */

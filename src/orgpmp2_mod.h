@@ -31,6 +31,7 @@ public:
    int computedistancefield(int argc, char * argv[], std::ostream& sout);
    int create(int argc, char * argv[], std::ostream& sout);
    int gettraj(int argc, char * argv[], std::ostream& sout);
+   int getcost(int argc, char * argv[], std::ostream& sout);
    int destroy(int argc, char * argv[], std::ostream& sout);
 
    mod(OpenRAVE::EnvironmentBasePtr penv) : OpenRAVE::ModuleBase(penv)
@@ -40,6 +41,7 @@ public:
       RegisterCommand("computedistancefield",orcwrap(boost::bind(&mod::computedistancefield,this,_1,_2,_3)),"compute distance field");
       RegisterCommand("create",orcwrap(boost::bind(&mod::create,this,_1,_2,_3)),"create a gpmp2 run");
       RegisterCommand("gettraj",orcwrap(boost::bind(&mod::gettraj,this,_1,_2,_3)),"get trajectory of gpmp2 run");
+      RegisterCommand("getcost",orcwrap(boost::bind(&mod::getcost,this,_1,_2,_3)),"get the cost of a given trajectory");
       RegisterCommand("destroy",orcwrap(boost::bind(&mod::destroy,this,_1,_2,_3)),"destroy gpmp2 run");
       
       this->e = penv;
