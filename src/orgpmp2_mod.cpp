@@ -691,7 +691,7 @@ int mod::create(int argc, char * argv[], std::ostream& sout)
 
   /* check validity of input arguments ... */
   if (!r->robot) { exc = "Did not pass a robot!"; goto error; }
-  if (!adofgoal) { exc = "Did not pass end_conf (goal in configuration space)!"; goto error; }
+  if (!adofgoal && !starttraj) { exc = "Did not pass end_conf or starttraj (goal in configuration space)!"; goto error; }
   if (!this->n_sdfs) { exc = "No signed distance fields have yet been computed!"; goto error; }
   if (r->n_points < 3) { exc = "n_points must be >=3!"; goto error; }
   if (!dh_a || !dh_alpha || !dh_d || !dh_theta) { exc = "Did not pass DH parameters!"; goto error; }
@@ -901,14 +901,32 @@ int mod::create(int argc, char * argv[], std::ostream& sout)
     RAVELOG_INFO("Starting GPMP2\n");
 
     int dof = r->n_adof;
-    
+
     // start and goal configuration
     vector<OpenRAVE::dReal> start_or;
     Vector start(dof), goal(dof);
     r->robot->GetActiveDOFValues(start_or);
-    for (i=0; i<dof; i++) {
-      start(i) = start_or[i];
-      goal(i) = adofgoal[i];
+    if (adofgoal)
+    {
+      for (i=0; i<dof; i++) {
+        start(i) = start_or[i];
+        goal(i) = adofgoal[i];
+      }
+    }
+    else if (starttraj.get())
+    {
+      RAVELOG_ERROR("WHY IS THIS HAPPENING?");
+      // TODO(brycew): this code isn't working for some reason, OpenRAVE sucks.
+      //std::vector<OpenRAVE::dReal> traj_goal;
+      //starttraj->GetWaypoint(-1, traj_goal, r->robot->GetActiveConfigurationSpecification());
+      //for (i = 0; i < dof; i++) {
+      //  start(i) = start_or[i];
+      //  goal(i) = traj_goal[i];
+      //}
+    }
+    else
+    {
+      RAVELOG_ERROR("adofgoal and starttraj both don't exist?!?");
     }
 
     // spheres data: vector of spheres -> pair(link_number,pair(radius,position_wrt_link))
