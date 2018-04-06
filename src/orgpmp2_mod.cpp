@@ -513,6 +513,8 @@ int mod::create(int argc, char * argv[], std::ostream& sout)
   double Qc = 1;
   std::map<int,int> robot_link_idx;
 
+  char *dat_filename = 0;
+
   /* lock environment; other temporaries */
   OpenRAVE::EnvironmentMutex::scoped_lock lockenv(this->e->GetMutex());
   std::vector< OpenRAVE::dReal > vec_jlimit_lower;
@@ -666,6 +668,8 @@ int mod::create(int argc, char * argv[], std::ostream& sout)
       r->fix_pose_sigma = atof(argv[++i]);
     else if (strcmp(argv[i],"fix_vel_sigma")==0 && i+1<argc)
       r->fix_vel_sigma = atof(argv[++i]);
+    else if (strcmp(argv[i],"dat_filename")==0 && i+1<argc)
+      dat_filename = argv[++i];
     else if (strcmp(argv[i],"cost_sigma")==0 && i+1<argc)
       r->cost_sigma = atof(argv[++i]);
     else if (strcmp(argv[i],"hinge_loss_eps")==0 && i+1<argc)
@@ -979,6 +983,10 @@ int mod::create(int argc, char * argv[], std::ostream& sout)
     opt_setting.cost_sigma      = r->cost_sigma;
     opt_setting.obs_check_inter = r->check_inter;
     opt_setting.Qc_model        = Qc_model;
+    if (dat_filename) {
+      printf("Setting dat filename to %s\n", dat_filename);
+      opt_setting.setConversionFilename(std::string(dat_filename)); 
+    }
  
     // timing starts from here
     Timer total_timer("total");
@@ -1208,7 +1216,9 @@ int mod::getcost(int argc, char* argv[], std::ostream& sout)
   {
     if (strcmp(argv[i], "starttraj")==0 && i+1 < argc)
     {
-      if (starttraj.get()) {exc = "Only one starttraj can be passed!"; goto error; }
+      if (starttraj.get()) {
+        throw OpenRAVE::openrave_exception("Only one starttraj can be passed!"); 
+      }
       starttraj = RaveCreateTrajectory(this->e);
       std::string traj_str(argv[++i]);
       std::istringstream ser_iss(traj_str);
@@ -1217,6 +1227,7 @@ int mod::getcost(int argc, char* argv[], std::ostream& sout)
   }
 
   // TODO(brycew): Get the cost and return it.
+  // More complicated than I think...
 }
 
 /**

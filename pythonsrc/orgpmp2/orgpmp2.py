@@ -22,7 +22,6 @@ def viewspheres(mod, robot=None, releasegil=False):
          cmd += ' robot %s' % shquot(robot.GetName())
       else:
          cmd += ' robot %s' % shquot(robot)
-   print 'cmd:', cmd
    return mod.SendCommand(cmd, releasegil)
 
 def computedistancefield(mod, res=None, centroid=None, extents=None,
@@ -38,7 +37,6 @@ def computedistancefield(mod, res=None, centroid=None, extents=None,
       cmd += ' cache_filename %s' % shquot(cache_filename)
    if save_sdf is not None:
       cmd += ' save_sdf %d' % save_sdf
-   print 'cmd:', cmd
    return mod.SendCommand(cmd, releasegil)
 
 def create(mod, robot=None, end_conf=None, base_pose=None,
@@ -47,7 +45,7 @@ def create(mod, robot=None, end_conf=None, base_pose=None,
    starttraj=None, total_step=None, obs_check_inter=None, output_inter=None,
    total_time=None, fix_pose_sigma=None, fix_vel_sigma=None, 
    cost_sigma=None, hinge_loss_eps=None, Qc=None,
-   save_info=None, releasegil=False, **kwargs):
+   save_info=None, dat_filename=None, releasegil=False, **kwargs):
    cmd = 'create'
    # robot params
    if robot is not None:
@@ -97,7 +95,9 @@ def create(mod, robot=None, end_conf=None, base_pose=None,
    # misc
    if save_info is not None:
       cmd += ' save_info %d' % save_info
-   print 'cmd:', cmd
+   if dat_filename is not None:
+      print dat_filename
+      cmd += ' dat_filename %s' % dat_filename
    return mod.SendCommand(cmd, releasegil)
 
 def gettraj(mod, run=None, no_collision_check=None, no_collision_exception=None,
@@ -123,9 +123,9 @@ def destroy(mod, run=None, releasegil=False):
 def rungpmp2(mod,
       # gettraj args
       no_collision_check=None, no_collision_exception=None, no_collision_details=None,
-      releasegil=False, **kwargs):
+      releasegil=False, dat_filename=None, **kwargs):
    # pass unknown args to create
-   run = create(mod, releasegil=releasegil, **kwargs)
+   run = create(mod, releasegil=releasegil, dat_filename=dat_filename, **kwargs)
    traj = gettraj(mod, run=run,
       no_collision_check=no_collision_check,
       no_collision_exception=no_collision_exception,
