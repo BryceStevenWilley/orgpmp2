@@ -1002,14 +1002,78 @@ int mod::create(int argc, char * argv[], std::ostream& sout)
     Values init_values, results;
     if (starttraj.get()) {
       RAVELOG_INFO("Initializing from a passed trajectory ...\n");
-      for (i=0; i<2*r->total_step; i++)
+      // Why doesn't OpenRAVE have a get length function? Why?
+      double full_length = 0.0;
+      std::vector<double> segment_lengths;
+      for (i = 0; i < starttraj->GetNumWaypoints() - 1; i++)
+      {
+         std::vector<OpenRAVE::dReal> q1;
+         std::vector<OpenRAVE::dReal> q2;
+         starttraj->GetWaypoint(i, q1, r->robot->GetActiveConfigurationSpecification());
+         starttraj->GetWaypoint(i + 1, q2, r->robot->GetActiveConfigurationSpecification());
+         double distance = 0.0;
+         for (int j = 0; j < q1.size(); j++)
+            distance += q2[j] - q1[j];
+         distance = sqrt(distance);
+         full_length += distance;
+         segment_lengths.push_back(distance);
+      }
+      // Interpolate without cutting corners.    
+      i = 0; // The nodes avaliable.
+      int count = 2 * r->total_step;
+      double remainingLength = full_length;
+      // We set n_points to always be bigger than input path.
+      const int n1 = starttraj->GetNumWaypoints() - 1;
+      for (int old_i = 0; old_i < n1; old_i++)
       {
         std::vector<OpenRAVE::dReal> vec;
-        starttraj->Sample(vec, i*starttraj->GetDuration()/((2 * r->total_step)-1), r->robot->GetActiveConfigurationSpecification());
+        starttraj->GetWaypoint(old_i, vec, r->robot->GetActiveConfigurationSpecification());
         for (j=0; j<r->n_adof; j++)
+        {
           r->traj[i*r->n_adof+j] = vec[j];
+        }
+        i++;
+        // The maximum number of states that can be added on the current motion (without endpoints)
+        int maxNStates = count + old_i - starttraj->GetNumWaypoints(); 
+        if (maxNStates > 0)
+        {
+          double segmentLength = segment_lengths[i];
+          int ns =
+            old_i + 1 == n1 ? maxNStates + 2 : (int)floor(0.5 + (double)count * segmentLength / remainingLength) + 1;
+              
+          if (ns > 2)
+          {
+            ns -= 2;
+            if (ns > maxNStates)
+              ns = maxNStates;
+
+            std::vector<OpenRAVE::dReal> q2;
+            starttraj->GetWaypoint(old_i + 1, q2, r->robot->GetActiveConfigurationSpecification());
+            for (int idx = 1; idx <= ns; idx++)
+            {
+              double split = idx * 1.0 / (ns + 1.0);
+              for (j=0; j<r->n_adof; j++)
+              {
+                r->traj[i*r->n_adof+j] = vec[j] + (q2[j] - vec[j]) * split;
+              }
+              i++;
+            }
+          }
+          else
+            ns = 0;
+
+          // update what remains to be done
+          count -= (ns + 1);
+          remainingLength -= segmentLength;
+        }
+        else
+          count--;
       }
-      // convert r->traj to init_values
+      // add the last state.
+      std::vector<OpenRAVE::dReal> vec;
+      starttraj->GetWaypoint(starttraj->GetNumWaypoints() - 1, vec, r->robot->GetActiveConfigurationSpecification());
+      for (j=0; j<r->n_adof; j++)
+        r->traj[i*r->n_adof+j] = vec[j];
       convertOpenRavePointerValues(dof, init_values, r->traj, opt_step);
     } else {
       RAVELOG_INFO("Initializing from a straight-line trajectory ...\n");
