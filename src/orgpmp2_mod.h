@@ -25,7 +25,7 @@ public:
    OpenRAVE::EnvironmentBasePtr e; /* filled on module creation */
    int n_sdfs;
    struct sdf * sdfs;
-   gpmp2::SignedDistanceField gtsam_sdf;
+   std::shared_ptr<gpmp2::SignedDistanceField> gtsam_sdf;
    
    int viewspheres(int argc, char * argv[], std::ostream& sout);
    int computedistancefield(int argc, char * argv[], std::ostream& sout);
@@ -33,6 +33,7 @@ public:
    int gettraj(int argc, char * argv[], std::ostream& sout);
    int getcost(int argc, char * argv[], std::ostream& sout);
    int destroy(int argc, char * argv[], std::ostream& sout);
+   int removefield(int argc, char *argv[], std::ostream& sout);
 
    mod(OpenRAVE::EnvironmentBasePtr penv) : OpenRAVE::ModuleBase(penv)
    {
@@ -42,6 +43,7 @@ public:
       RegisterCommand("create",orcwrap(boost::bind(&mod::create,this,_1,_2,_3)),"create a gpmp2 run");
       RegisterCommand("gettraj",orcwrap(boost::bind(&mod::gettraj,this,_1,_2,_3)),"get trajectory of gpmp2 run");
       RegisterCommand("getcost",orcwrap(boost::bind(&mod::getcost,this,_1,_2,_3)),"get the cost of a given trajectory");
+      RegisterCommand("removefield",orcwrap(boost::bind(&mod::removefield,this,_1,_2,_3)), "free field structures.");
       RegisterCommand("destroy",orcwrap(boost::bind(&mod::destroy,this,_1,_2,_3)),"destroy gpmp2 run");
       
       this->e = penv;

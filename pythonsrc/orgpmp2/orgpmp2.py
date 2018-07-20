@@ -11,6 +11,7 @@ def bind(mod):
    mod.gettraj = types.MethodType(gettraj,mod)
    mod.destroy = types.MethodType(destroy,mod)
    mod.rungpmp2 = types.MethodType(rungpmp2,mod)
+   mod.removefield = types.MethodType(removefield, mod)
 
 def shquot(s):
    return "'" + s.replace("'","'\\''") + "'"
@@ -96,7 +97,6 @@ def create(mod, robot=None, end_conf=None, base_pose=None,
    if save_info is not None:
       cmd += ' save_info %d' % save_info
    if dat_filename is not None:
-      print dat_filename
       cmd += ' dat_filename %s' % dat_filename
    return mod.SendCommand(cmd, releasegil)
 
@@ -118,6 +118,10 @@ def destroy(mod, run=None, releasegil=False):
    cmd = 'destroy'
    if run is not None:
       cmd += ' run %s' % run
+   return mod.SendCommand(cmd, releasegil)
+
+def removefield(mod, releasegil=False):
+   cmd = 'removefield'
    return mod.SendCommand(cmd, releasegil)
 
 def rungpmp2(mod,

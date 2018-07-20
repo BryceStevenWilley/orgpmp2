@@ -485,17 +485,24 @@ int mod::computedistancefield(int argc, char * argv[], std::ostream& sout)
     // origin of grid in world frame
     Point3 gorigin(origin[0],origin[1],origin[2]);
 
-    this->gtsam_sdf = gpmp2::SignedDistanceField(gorigin, res, env_sdf);
+    this->gtsam_sdf = std::make_shared<gpmp2::SignedDistanceField>(gorigin, res, env_sdf);
 
     if (save_sdf)
     {
       string save_file(cache_filename);
       save_file = save_file.substr(0,save_file.find_last_of('.'))+".bin";
       RAVELOG_INFO("Saving gpmp2 sdf to .bin file.\n");
-      gtsam_sdf.saveSDF(save_file);
+      gtsam_sdf->saveSDF(save_file);
     }
   }
   return 0;
+}
+
+int mod::removefield(int argc, char *argv[], std::ostream& sout)
+{
+  free(this->sdfs);
+  this->n_sdfs = 0;
+  this->gtsam_sdf.reset();
 }
 
 /**
@@ -984,7 +991,6 @@ int mod::create(int argc, char * argv[], std::ostream& sout)
     opt_setting.obs_check_inter = r->check_inter;
     opt_setting.Qc_model        = Qc_model;
     if (dat_filename) {
-      printf("Setting dat filename to %s\n", dat_filename);
       opt_setting.setConversionFilename(std::string(dat_filename)); 
     }
  
@@ -1013,7 +1019,7 @@ int mod::create(int argc, char * argv[], std::ostream& sout)
 
     // Planner
     RAVELOG_INFO("Optimizing ...\n");
-    results = BatchTrajOptimize3DArm(arm, this->gtsam_sdf, start, Vector::Zero(dof),
+    results = BatchTrajOptimize3DArm(arm, *this->gtsam_sdf, start, Vector::Zero(dof),
         goal, Vector::Zero(dof), init_values, opt_setting);
 
     // traj interpolation to total step to output
